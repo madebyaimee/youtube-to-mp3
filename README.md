@@ -45,8 +45,7 @@ brew install ffmpeg
 sudo apt install ffmpeg
 ```
 
-Verify it worked by running `ffmpeg -version`. You should get a wall of version
-information rather than "command not found".
+Verify it worked by running `ffmpeg -version`.
 
 ## Using it
 
