@@ -1,16 +1,14 @@
-# PyInstaller spec for the yt2mp3 command line app.
+# PyInstaller spec for the yt2mp3 window app.
 #
-# Build with:  uv run pyinstaller yt2mp3-cli.spec
+# Build with:  uv run pyinstaller yt2mp3.spec
+#
+# This is the one to hand to someone who just wants to save a song. The console
+# build (yt2mp3-cli.spec) is the same engine behind a prompt; everything below
+# that differs from it is marked GUI ONLY.
 #
 # Put ffmpeg.exe in a vendor/ folder next to this file first. Use Gyan's
 # *essentials* build (~97MB), not the full one (212MB); essentials still has
 # libmp3lame and the opus/aac decoders, which is all this needs. See README.
-#
-# ffprobe is NOT needed: yt-dlp's get_audio_codec falls back to parsing
-# `ffmpeg -i` output when ffprobe is missing, which halves the payload again.
-#
-# Named yt2mp3-cli rather than yt2mp3 so it can't overwrite yt2mp3.spec, which
-# builds the GUI. PyInstaller names generated specs after the target.
 
 from pathlib import Path
 
@@ -31,7 +29,9 @@ if not FFMPEG.exists():
 ytdlp_datas, ytdlp_binaries, ytdlp_hiddenimports = collect_all("yt_dlp")
 
 a = Analysis(
-    ["yt2mp3.py"],
+    # GUI ONLY: gui.py is the entry point, not yt2mp3.py. It pulls in core.py
+    # by import, so core does not need listing.
+    ["gui.py"],
     pathex=[],
     binaries=[
         # (source, destination inside the bundle). "." puts it at the root of
@@ -43,10 +43,9 @@ a = Analysis(
     hiddenimports=ytdlp_hiddenimports,
     hookspath=[],
     runtime_hooks=[],
-    excludes=[
-        # The CLI never opens a window, so Tkinter is dead weight here.
-        "tkinter",
-    ],
+    # GUI ONLY: no excludes. The console spec drops tkinter as dead weight;
+    # here tkinter *is* the app, so the excludes list has to stay empty.
+    excludes=[],
     noarchive=False,
 )
 
@@ -58,11 +57,18 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name="yt2mp3-cli",
+    name="yt2mp3",
     debug=False,
     strip=False,
     upx=False,          # UPX compression makes antivirus flag it more often
-    console=True,       # the app is a prompt; it needs somewhere to read input
+    # GUI ONLY: no console window behind the app. This is what makes it feel
+    # like a program rather than a script, and it is also why core.py routes
+    # yt-dlp through _YdlLogger - with console=False there is no stdout or
+    # stderr at all, and yt-dlp writing to them would take the app down.
+    console=False,
+    # Leave windowed tracebacks on. If it dies on someone else's machine, a
+    # dialog they can screenshot beats a window that vanishes.
+    disable_windowed_traceback=False,
     icon=None,          # TODO: point at an .ico once you have one
 )
 
@@ -70,9 +76,14 @@ exe = EXE(
 # -----
 # Build on the target OS. PyInstaller is not a cross-compiler.
 #
+# There is no console here, so nothing is ever printed. The log file that
+# core.setup_logging() opens - ~/.yt2mp3/yt2mp3.log - is the only way to find
+# out what went wrong. Ask for that file first when someone reports a problem.
+#
 # This is a onefile build, so the bootloader unpacks ffmpeg to a temp directory
-# on every launch, which costs a few seconds. For an instant start, add a
-# COLLECT block for a onedir build and zip the folder to distribute it instead.
+# on every launch, which costs a few seconds before the window appears. For an
+# instant start, add a COLLECT block for a onedir build and zip the folder to
+# distribute it instead.
 #
 # yt-dlp goes stale as YouTube changes things, and users can't upgrade it inside
 # a frozen exe. Plan on rebuilding every few months.
