@@ -9,5 +9,8 @@ wheels/
 # Virtual environments
 .venv
 
+# Bundled ffmpeg for the .exe build - ~97MB, never commit this
+vendor/
+
 # Ignore downloaded files
 *.mp3
