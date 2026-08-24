@@ -1,3 +1,10 @@
+"""
+Script that downloads a single youtube URL into a .mp3 format.
+Requires Pythong 3.10+, yt_dlp installed and ffmpeg on PATH.
+Run it using `uv run main.py` in terminal
+The output file will save in your current working directory.
+"""
+
 import sys
 import subprocess
 import yt_dlp
