@@ -3,8 +3,6 @@
 A small command line script that takes a YouTube URL and saves the audio as an
 mp3 file.
 
-One URL in, one mp3 out
-
 ## What you need
 
 - **Python 3.10 or newer.** Check with `python --version`.
